@@ -1,0 +1,206 @@
+#include <iostream>
+#include <string>
+using namespace std;
+
+// =======================
+// Interfaces (ISP + DIP)
+// =======================
+
+class ILogin {
+public:
+    virtual void login() = 0;
+    virtual void logout() = 0;
+    virtual ~ILogin() {}
+};
+
+class IComplaint {
+public:
+    virtual void updateStatus(const string& status) = 0;
+    virtual ~IComplaint() {}
+};
+
+class IRoute {
+public:
+    virtual void optimizeRoute() = 0;
+    virtual ~IRoute() {}
+};
+
+class ISensor {
+public:
+    virtual float readFillLevel() = 0;
+    virtual void sendData() = 0;
+    virtual ~ISensor() {}
+};
+
+// =======================
+// Abstract User (LSP)
+// =======================
+
+class User : public ILogin {
+protected:
+    int id;
+    string name;
+    string email;
+
+public:
+    void login() override {
+        cout << "User logged in\n";
+    }
+
+    void logout() override {
+        cout << "User logged out\n";
+    }
+
+    virtual ~User() {}
+};
+
+// =======================
+// Complaint (SRP)
+// =======================
+
+class Complaint : public IComplaint {
+private:
+    int complaintId;
+    string type;
+    string status;
+
+public:
+    void updateStatus(const string& status) override {
+        this->status = status;
+        cout << "Complaint status updated to: " << status << endl;
+    }
+};
+
+// =======================
+// Citizen
+// =======================
+
+class Citizen : public User {
+public:
+    void submitComplaint(IComplaint* complaint) {
+        cout << "Citizen submitted a complaint\n";
+        complaint->updateStatus("Pending");
+    }
+
+    void trackComplaint(int id) {
+        cout << "Tracking complaint ID: " << id << endl;
+    }
+};
+
+// =======================
+// Driver
+// =======================
+
+class Driver : public User {
+public:
+    void viewRoutes() {
+        cout << "Driver viewing assigned routes\n";
+    }
+
+    void confirmEmptying(int binId) {
+        cout << "Driver confirmed emptying bin " << binId << endl;
+    }
+};
+
+// =======================
+// Technician
+// =======================
+
+class Technician : public User {
+public:
+    void resolveComplaint(IComplaint* complaint) {
+        cout << "Technician resolved complaint\n";
+        complaint->updateStatus("Resolved");
+    }
+
+    void uploadReport(int id, const string& report) {
+        cout << "Technician uploaded report for complaint " << id << endl;
+    }
+};
+
+// =======================
+// Supervisor
+// =======================
+
+class Supervisor : public User {
+public:
+    void assignComplaint(int complaintId, int techId) {
+        cout << "Supervisor assigned complaint " << complaintId
+             << " to technician " << techId << endl;
+    }
+
+    void monitorDrivers() {
+        cout << "Supervisor monitoring drivers\n";
+    }
+};
+
+// =======================
+// Route (OCP)
+// =======================
+
+class Route : public IRoute {
+private:
+    int routeId;
+
+public:
+    void optimizeRoute() override {
+        cout << "Route optimized\n";
+    }
+};
+
+// =======================
+// Bin
+// =======================
+
+class Bin {
+private:
+    int binId;
+    float fillLevel;
+    string status;
+
+public:
+    void updateStatus(const string& status) {
+        this->status = status;
+        cout << "Bin status updated to " << status << endl;
+    }
+};
+
+// =======================
+// Sensor (DIP)
+// =======================
+
+class Sensor : public ISensor {
+private:
+    int sensorId;
+
+public:
+    float readFillLevel() override {
+        return 90.0f;
+    }
+
+    void sendData() override {
+        cout << "Sensor data sent\n";
+    }
+};
+
+// =======================
+// Central System (SRP Fixed + DIP)
+// =======================
+
+class CentralSystem {
+public:
+    void receiveSensorData(ISensor* sensor, Bin& bin) {
+        float level = sensor->readFillLevel();
+        if (level >= 80) {
+            bin.updateStatus("Needs Collection");
+        }
+    }
+
+    void generateRoute(IRoute* route) {
+        route->optimizeRoute();
+    }
+
+    void createComplaint(IComplaint* complaint) {
+        complaint->updateStatus("Created");
+    }
+};
